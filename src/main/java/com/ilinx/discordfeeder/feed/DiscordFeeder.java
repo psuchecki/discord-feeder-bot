@@ -1,5 +1,6 @@
 package com.ilinx.discordfeeder.feed;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -46,7 +47,12 @@ public class DiscordFeeder extends ListenerAdapter {
 				String authorName = event.getAuthor().getName();
 				String contentDisplay = event.getMessage().getContentDisplay();
 				logger.info("New message from {}: {}", authorName, contentDisplay);
-				gmailEmailSender.sendEmail(authorName + ":" + contentDisplay);
+				String creationTime = event.getMessage().getCreationTime().toString();
+				String emailContent = String.format("[%s] %s: %s", creationTime, authorName, contentDisplay);
+				String imageUrl = isNotEmpty(event.getMessage().getAttachments()) ?
+						event.getMessage().getAttachments().get(0).getUrl() : null;
+
+				gmailEmailSender.sendEmail(emailContent, creationTime, imageUrl);
 			} catch (IOException | MessagingException e) {
 				e.printStackTrace();
 			}
@@ -54,8 +60,8 @@ public class DiscordFeeder extends ListenerAdapter {
 	}
 
 	private boolean isAlanTradeSignal(MessageReceivedEvent event) {
-		return event.getGuild() != null && event.getChannel()!= null && alanGuildName.equals(event.getGuild().getName())
-				&& alanChannelName.equals(event.getChannel().getName());
+		return event.getGuild() != null && event.getChannel() != null && alanGuildName.equals(event.getGuild()
+				.getName()) && alanChannelName.equals(event.getChannel().getName());
 	}
 
 }
