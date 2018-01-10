@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 import com.ilinx.discordfeeder.gmail.GmailEmailSender;
 
@@ -28,6 +29,9 @@ public class DiscordFeeder extends ListenerAdapter {
 
 	@Autowired
 	private GmailEmailSender gmailEmailSender;
+	@Autowired
+	private StopWatch stopWatch;
+
 	@Value("${discord.token}")
 	private String token;
 	@Value("${alan.channel.name}")
@@ -44,6 +48,7 @@ public class DiscordFeeder extends ListenerAdapter {
 	public void onMessageReceived(MessageReceivedEvent event) {
 		if (isAlanTradeSignal(event)) {
 			try {
+				stopWatch.start();
 				String authorName = event.getAuthor().getName();
 				String contentDisplay = event.getMessage().getContentDisplay();
 				logger.info("New message from {}: {}", authorName, contentDisplay);
@@ -53,7 +58,10 @@ public class DiscordFeeder extends ListenerAdapter {
 						event.getMessage().getAttachments().get(0).getUrl() : null;
 
 				gmailEmailSender.sendEmail(emailContent, creationTime, imageUrl);
+				stopWatch.stop();
+				logger.info("Request handled in {} miliseconds", stopWatch.getLastTaskTimeMillis());
 			} catch (IOException | MessagingException e) {
+				stopWatch.stop();
 				e.printStackTrace();
 			}
 		}

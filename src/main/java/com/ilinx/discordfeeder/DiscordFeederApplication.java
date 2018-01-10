@@ -6,6 +6,7 @@ import java.security.GeneralSecurityException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.util.StopWatch;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.gmail.Gmail;
@@ -24,5 +25,10 @@ public class DiscordFeederApplication {
 		return new Gmail.Builder(GmailConfiguration.HTTP_TRANSPORT, GmailConfiguration.JSON_FACTORY, credential)
 				.setApplicationName(GmailConfiguration.APPLICATION_NAME)
 				.build();
+	}
+
+	@Bean
+	public static StopWatch stopWatch() {
+		return new StopWatch();
 	}
 }
