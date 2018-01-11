@@ -46,7 +46,6 @@ public class DiscordFeeder extends ListenerAdapter {
 	private String alanGuildName;
 
 
-
 	@PostConstruct
 	public void connectToDiscord() throws LoginException, RateLimitedException {
 		new JDABuilder(AccountType.CLIENT).setToken(token).addEventListener(this).buildAsync();
@@ -55,26 +54,21 @@ public class DiscordFeeder extends ListenerAdapter {
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 		if (isAlanTradeSignal(event)) {
-			try {
-				stopWatch.start();
-				String authorName = event.getAuthor().getName();
-				String contentDisplay = event.getMessage().getContentDisplay();
-				logger.info("New message from {}: {}", authorName, contentDisplay);
-				String creationTime = event.getMessage().getCreationTime().toString();
-				String emailContent = String.format("[%s] %s: %s", creationTime, authorName, contentDisplay);
-				String imageUrl = isNotEmpty(event.getMessage().getAttachments()) ?
-						event.getMessage().getAttachments().get(0).getUrl() : null;
-				String subject = subjectHelper.createSubject(GmailEmailSender.SUBJECT, contentDisplay,  creationTime,
-						imageUrl);
+			stopWatch.start();
+			String authorName = event.getAuthor().getName();
+			String contentDisplay = event.getMessage().getContentDisplay();
+			logger.info("New message from {}: {}", authorName, contentDisplay);
+			String creationTime = event.getMessage().getCreationTime().toString();
+			String emailContent = String.format("[%s] %s: %s", creationTime, authorName, contentDisplay);
+			String imageUrl = isNotEmpty(event.getMessage().getAttachments()) ?
+					event.getMessage().getAttachments().get(0).getUrl() : null;
+			String subject = subjectHelper.createSubject(GmailEmailSender.SUBJECT, contentDisplay, creationTime,
+					imageUrl);
+			new Thread(() -> gmailEmailSender.sendEmail(emailContent, subject, imageUrl)).start();
+			new Thread(() -> slackWebhooks.invokeSlackWebhook(emailContent, subject, imageUrl)).start();
+			stopWatch.stop();
+			logger.info("Request handled in {} miliseconds", stopWatch.getLastTaskTimeMillis());
 
-				gmailEmailSender.sendEmail(emailContent, subject, imageUrl);
-				slackWebhooks.invokeSlackWebhook(emailContent, subject, imageUrl);
-				stopWatch.stop();
-				logger.info("Request handled in {} miliseconds", stopWatch.getLastTaskTimeMillis());
-			} catch (IOException | MessagingException e) {
-				stopWatch.stop();
-				e.printStackTrace();
-			}
 		}
 	}
 

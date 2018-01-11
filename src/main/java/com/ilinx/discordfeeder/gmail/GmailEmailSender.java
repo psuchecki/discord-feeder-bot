@@ -10,13 +10,13 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
 import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,10 +40,13 @@ public class GmailEmailSender {
 	@Value("${email.from}")
 	private String from;
 
-	public void sendEmail(String emailContent, String subject, String imageUrl) throws IOException,
-			MessagingException {
-		Message message = createEmail(emailContent, subject, imageUrl);
-		gmailService.users().messages().send(AUTHORIZED_USER, message).execute();
+	public void sendEmail(String emailContent, String subject, String imageUrl) {
+		try {
+			Message message = createEmail(emailContent, subject, imageUrl);
+			gmailService.users().messages().send(AUTHORIZED_USER, message).execute();
+		} catch (IOException|MessagingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Message createEmail(String bodyText, String subject, String imageUrl)
@@ -58,7 +61,7 @@ public class GmailEmailSender {
 		email.setSubject(subject);
 		MimeMultipart multipart = new MimeMultipart("related");
 		BodyPart messageBodyPart = new MimeBodyPart();
-		String htmlText = "<div>"+ bodyText +"</div>";
+		String htmlText = "<div>" + bodyText + "</div>";
 		if (!StringUtils.isEmpty(imageUrl)) {
 			htmlText = htmlText + "<img src=\"cid:image\">";
 			messageBodyPart.setContent(htmlText, "text/html");
@@ -68,7 +71,9 @@ public class GmailEmailSender {
 			URLConnection openConnection = url.openConnection();
 			openConnection.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
 			openConnection.connect();
-			DataSource discordImageDataSource = new ByteArrayDataSource(openConnection.getInputStream(), openConnection.getContentType());;
+			DataSource discordImageDataSource = new ByteArrayDataSource(openConnection.getInputStream(),
+					openConnection.getContentType());
+			;
 
 			messageBodyPart.setDataHandler(new DataHandler(discordImageDataSource));
 			messageBodyPart.setHeader("Content-ID", "<image>");
