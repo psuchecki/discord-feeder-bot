@@ -39,10 +39,9 @@ public class SlackWebhooks {
     /**
      * Make a POST call to the incoming webhook url.
      */
-    @PostConstruct
-    public void invokeSlackWebhook(String msg, String creationTime, String imgUrl) {
+    public void invokeSlackWebhook(String msg, String subject, String imgUrl) {
         RestTemplate restTemplate = new RestTemplate();
-        RichMessage richMessage = new RichMessage(String.format("Alan post time: %s, %s", creationTime, msg));
+        RichMessage richMessage = new RichMessage(String.format("%s\n%s", subject, msg));
         // set attachments
         Attachment[] attachments = new Attachment[1];
         attachments[0] = new Attachment();

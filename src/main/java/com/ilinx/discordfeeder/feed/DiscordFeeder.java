@@ -33,6 +33,10 @@ public class DiscordFeeder extends ListenerAdapter {
 	private GmailEmailSender gmailEmailSender;
 	@Autowired
 	private StopWatch stopWatch;
+	@Autowired
+	private SlackWebhooks slackWebhooks;
+	@Autowired
+	private SubjectHelper subjectHelper;
 
 	@Value("${discord.token}")
 	private String token;
@@ -41,8 +45,7 @@ public class DiscordFeeder extends ListenerAdapter {
 	@Value("${alan.guild.name}")
 	private String alanGuildName;
 
-	@Autowired
-	private SlackWebhooks slackWebhooks;
+
 
 	@PostConstruct
 	public void connectToDiscord() throws LoginException, RateLimitedException {
@@ -61,9 +64,11 @@ public class DiscordFeeder extends ListenerAdapter {
 				String emailContent = String.format("[%s] %s: %s", creationTime, authorName, contentDisplay);
 				String imageUrl = isNotEmpty(event.getMessage().getAttachments()) ?
 						event.getMessage().getAttachments().get(0).getUrl() : null;
+				String subject = subjectHelper.createSubject(GmailEmailSender.SUBJECT, contentDisplay,  creationTime,
+						imageUrl);
 
-				gmailEmailSender.sendEmail(emailContent, creationTime, imageUrl);
-				slackWebhooks.invokeSlackWebhook(emailContent, creationTime, imageUrl);
+				gmailEmailSender.sendEmail(emailContent, subject, imageUrl);
+				slackWebhooks.invokeSlackWebhook(emailContent, subject, imageUrl);
 				stopWatch.stop();
 				logger.info("Request handled in {} miliseconds", stopWatch.getLastTaskTimeMillis());
 			} catch (IOException | MessagingException e) {

@@ -40,13 +40,13 @@ public class GmailEmailSender {
 	@Value("${email.from}")
 	private String from;
 
-	public void sendEmail(String emailContent, String creationTime, String imageUrl) throws IOException,
+	public void sendEmail(String emailContent, String subject, String imageUrl) throws IOException,
 			MessagingException {
-		Message message = createEmail(emailContent, creationTime, imageUrl);
+		Message message = createEmail(emailContent, subject, imageUrl);
 		gmailService.users().messages().send(AUTHORIZED_USER, message).execute();
 	}
 
-	public Message createEmail(String bodyText, String creationTime, String imageUrl)
+	public Message createEmail(String bodyText, String subject, String imageUrl)
 			throws MessagingException, IOException {
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
@@ -55,7 +55,7 @@ public class GmailEmailSender {
 
 		email.setFrom(new InternetAddress(from));
 		email.addRecipient(RecipientType.TO, new InternetAddress(to));
-		email.setSubject(SUBJECT + creationTime);
+		email.setSubject(subject);
 		MimeMultipart multipart = new MimeMultipart("related");
 		BodyPart messageBodyPart = new MimeBodyPart();
 		String htmlText = "<div>"+ bodyText +"</div>";
