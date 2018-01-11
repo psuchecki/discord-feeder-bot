@@ -33,8 +33,10 @@ public class SlackWebhooks {
      * on Slack. You can setup a new incoming webhook
      * <a href="https://my.slack.com/services/new/incoming-webhook/">here</a>.
      */
-    @Value("${slackIncomingWebhookUrl}")
-    private String slackIncomingWebhookUrl;
+    @Value("${slackIncomingWebhookUrlOne}")
+    private String slackIncomingWebhookUrlOne;
+    @Value("${slackIncomingWebhookUrlTwo}")
+    private String slackIncomingWebhookUrlTwo;
 
     /**
      * Make a POST call to the incoming webhook url.
@@ -57,7 +59,8 @@ public class SlackWebhooks {
 
         // Always remember to send the encoded message to Slack
         try {
-            restTemplate.postForEntity(slackIncomingWebhookUrl, richMessage.encodedMessage(), String.class);
+            restTemplate.postForEntity(slackIncomingWebhookUrlOne, richMessage.encodedMessage(), String.class);
+            restTemplate.postForEntity(slackIncomingWebhookUrlTwo, richMessage.encodedMessage(), String.class);
         } catch (RestClientException e) {
             logger.error("Error posting to Slack Incoming Webhook: ", e);
         }
