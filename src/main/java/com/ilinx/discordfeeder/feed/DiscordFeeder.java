@@ -13,6 +13,8 @@ import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
+import com.ilinx.discordfeeder.jbot.slack.SlackWebhooks;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,9 @@ public class DiscordFeeder extends ListenerAdapter {
 	@Value("${alan.guild.name}")
 	private String alanGuildName;
 
+	@Autowired
+	private SlackWebhooks slackWebhooks;
+
 	@PostConstruct
 	public void connectToDiscord() throws LoginException, RateLimitedException {
 		new JDABuilder(AccountType.CLIENT).setToken(token).addEventListener(this).buildAsync();
@@ -58,6 +63,7 @@ public class DiscordFeeder extends ListenerAdapter {
 						event.getMessage().getAttachments().get(0).getUrl() : null;
 
 				gmailEmailSender.sendEmail(emailContent, creationTime, imageUrl);
+				slackWebhooks.invokeSlackWebhook(emailContent, creationTime, imageUrl);
 				stopWatch.stop();
 				logger.info("Request handled in {} miliseconds", stopWatch.getLastTaskTimeMillis());
 			} catch (IOException | MessagingException e) {
