@@ -47,7 +47,7 @@ public class SlackWebhooks {
         // set attachments
         Attachment[] attachments = new Attachment[1];
         attachments[0] = new Attachment();
-        attachments[0].setText(imgUrl);
+        attachments[0].setImageUrl(imgUrl);
         richMessage.setAttachments(attachments);
 
         // For debugging purpose only
